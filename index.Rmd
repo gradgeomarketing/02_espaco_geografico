@@ -1,0 +1,381 @@
+---
+title: "Espaço Geográfico, Consumo e Localização"
+subtitle: "Unidade 2 | Tópicos Especiais Mercadológicos: Geomarketing"
+author: "Prof.ª Renata Oliveira"
+institute: "CEFET-MG – Departamento de Ciências Sociais Aplicadas"
+date: "Agosto/Setembro 2026"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["default", "xaringan-themer.css", "slides.css", "course-overrides.css", "zoom.css"]
+    includes:
+      after_body: zoom.html
+    nature:
+      ratio: "16:9"
+      highlightLines: true
+      highlightStyle: solarized-light
+      countIncrementalSlides: false
+      slideNumberFormat: |
+         <div class="progress-bar-container">
+           <div class="progress-bar" style="width: calc(%current% / %total% * 100%);">
+           </div>
+         </div>
+---
+
+```{r child = "setup.Rmd"}
+
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+```{r xaringan-editable, echo=FALSE}
+xaringanExtra::use_editable(expires = 1)
+
+```
+
+```{r xaringanExtra-clipboard, echo=FALSE}
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clipboard\"></i>",
+    success_text = "<i class=\"fa fa-check\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times-circle\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
+```
+
+```{r xaringan-fit-screen, echo=FALSE}
+xaringanExtra::use_fit_screen()
+
+```
+
+```{r xaringan-extra-styles, echo=FALSE}
+xaringanExtra::use_extra_styles(
+  hover_code_line = TRUE,         #<<
+  mute_unhighlighted_code = TRUE  #<<
+)
+```
+
+```{r xaringan-scribble, echo=FALSE}
+xaringanExtra::use_scribble()
+```
+
+---
+class: center, middle
+
+# Espaço Geográfico, Consumo e Localização
+
+.large[
+O **onde** das decisões de mercado não é neutro —
+ele carrega história, infraestrutura, poder e mobilidade.
+]
+
+---
+
+## Agenda — Unidade 2 (6h / 2 encontros)
+
+**Encontro 2 (4h)**
+- Espaço geográfico como variável mercadológica
+- Distribuição espacial: população, renda e infraestrutura
+- Teorias de localização: centralidade e acessibilidade
+- Fonte de dados: IBGE Censo 2022 e PNAD
+
+**Encontro 3 (2h)**
+- Mobilidade urbana e comportamento do consumidor
+- Dados de fluxo e footfall
+- QGIS: mapa coroplético de renda
+- Atividade prática: análise de potencial por bairro
+
+---
+
+## O Espaço como Variável Estratégica
+
+.pull-left[
+O espaço não é apenas **cenário** — ele é **produtor** de diferenças:
+
+- Infraestrutura de transporte cria **acessibilidade diferenciada**
+- Concentração de serviços gera **centralidade**
+- Distância física implica **custo e tempo** para o consumidor
+- A vizinhança influencia **hábitos de consumo**
+]
+
+.pull-right[
+.tip[
+**Exemplo BH:** Um supermercado na Savassi e outro em Venda Nova têm perfis de cliente, ticket médio e mix de produtos completamente diferentes — mesmo sendo da mesma rede.
+]
+]
+
+---
+
+## População no QGIS — preparar os dados
+
+.your-turn[
+**Etapa 1 — obter e carregar as bases:**
+
+1. Baixar a malha de municípios de MG em [geociencias.ibge.gov.br/downloads-geociencias.html](https://geociencias.ibge.gov.br/downloads-geociencias.html) → *Organização do Território → Malhas Territoriais → Malha de Municípios* → ano 2022 → estado MG (shapefile ou GeoPackage)
+2. No QGIS: *Camada → Adicionar Camada → Adicionar Camada Vetorial* → selecionar o arquivo `MG_Municipios_2022`
+3. Baixar a tabela de população em [sidra.ibge.gov.br](https://sidra.ibge.gov.br) (Tabela 9514 – Censo 2022, variável 93 "Total de pessoas", nível geográfico Município, filtro Estado = MG) e exportar como CSV
+]
+
+.footnote[IBGE Censo 2022: [sidra.ibge.gov.br](https://sidra.ibge.gov.br) | Malhas territoriais: [geociencias.ibge.gov.br](https://geociencias.ibge.gov.br/downloads-geociencias.html)]
+
+---
+
+## População no QGIS — unir as bases
+
+.your-turn[
+**Etapa 2 — relacionar tabela e geometria:**
+
+4. No QGIS: *Camada → Adicionar Camada → Adicionar Camada de Texto Delimitado* → carregar o CSV (Tipo de geometria: "Nenhuma geometria", pois é uma tabela de atributos)
+5. Botão direito na camada `MG_Municipios_2022` → *Propriedades → Joins* → clicar em **+** → Camada de join: CSV de população; Campo de join: `Município (Código)`; Campo de destino: `CD_MUN`
+6. Confirmar — a coluna de população fica disponível para simbologia e rótulos
+]
+
+.footnote[IBGE Censo 2022: [sidra.ibge.gov.br](https://sidra.ibge.gov.br) | Malhas territoriais: [geociencias.ibge.gov.br](https://geociencias.ibge.gov.br/downloads-geociencias.html)]
+
+---
+
+## Hierarquia Urbana e Centralidade
+
+**Teoria das Localidades Centrais** (Christaller, 1933)
+
+.pull-left[
+- Centros maiores oferecem bens de **maior ordem** (especialidade)
+- Centros menores oferecem bens de **menor ordem** (conveniência)
+- Cada centro tem uma **área de influência** definida por distância
+- Competição espacial cria **padrão hexagonal** de distribuição
+]
+
+.pull-right[
+```{r hex-diagram, echo=FALSE, fig.height=4}
+# Diagrama simplificado de hierarquia urbana (ilustração do slide, não é
+# conteúdo ensinado ao aluno — a disciplina não ensina R/ggplot2)
+library(ggplot2)
+set.seed(1)
+centros <- data.frame(
+  x = c(0, -3, 3, 0, -3, 3, 0),
+  y = c(0, 2, 2, -2.5, -2.5, -0.5, 2.5),
+  tipo = c("Grande centro", rep("Centro médio", 2), rep("Centro local", 4)),
+  tam = c(5, 3, 3, 2, 2, 2, 2)
+)
+ggplot(centros, aes(x, y, size = tam, color = tipo)) +
+  geom_point(alpha = 0.8) +
+  scale_size_continuous(range = c(4, 12)) +
+  scale_color_manual(values = c("#002b36","#8fada7","#E9AFA3")) +
+  labs(title = "Hierarquia de Centralidade (esquema)",
+       color = "Tipo", size = "Porte") +
+  theme_void() +
+  theme(legend.position = "bottom")
+```
+]
+
+---
+
+## Acessibilidade conecta origens e destinos
+
+**Acessibilidade** = facilidade de alcançar destinos a partir de uma origem.
+
+Depende de:
+- **Modo de transporte** (pé, bicicleta, carro, ônibus, metrô)
+- **Tempo de deslocamento** (não apenas distância euclidiana)
+- **Custo da viagem** (tarifa, combustível, estacionamento)
+- **Oferta de serviços no destino** (variedade, qualidade)
+
+---
+
+## Acessibilidade no QGIS — configurar
+
+.your-turn[
+**Plugin ORS Tools:**
+
+1. *Complementos → Gerenciar e Instalar Complementos* → buscar **ORS Tools** → Instalar
+2. Criar conta gratuita em [openrouteservice.org](https://openrouteservice.org) e gerar um token (API key)
+3. No QGIS: menu *Web → ORS Tools* → aba **Provider Settings** → colar o token gerado
+]
+
+---
+
+## Acessibilidade no QGIS — gerar isócrona
+
+.your-turn[
+**Calcule a área alcançável em 15 minutos a pé:**
+
+4. Aba **Isochrones** → *Location*: clicar no mapa sobre o CEFET-MG (ou inserir as coordenadas -43.9365, -19.9208)
+5. *Profile*: **foot-walking** (a pé)
+6. *Range Type*: **Time** | *Range*: 15 (minutos)
+7. Clicar em **Run** — o polígono da isócrona de 15 min a pé é adicionado como nova camada
+]
+
+---
+
+## Renda por setor — preparar as bases
+
+.your-turn[
+**Etapa 1 — dados e relacionamento:**
+
+1. Baixar a malha de Setores Censitários 2022 de BH em [geociencias.ibge.gov.br/downloads-geociencias.html](https://geociencias.ibge.gov.br/downloads-geociencias.html) → *Malhas Territoriais → Malha de Setores Censitários* (shapefile/GeoPackage)
+2. Baixar a tabela de renda domiciliar média por setor censitário (Censo 2022) em [sidra.ibge.gov.br](https://sidra.ibge.gov.br) e exportar como CSV
+3. No QGIS: adicionar a malha de setores (*Camada → Adicionar Camada Vetorial*) e a tabela de renda (*Camada → Adicionar Camada de Texto Delimitado*)
+4. Unir os dados: Propriedades da camada de setores → *Joins* → **+** → campo de join = código do setor censitário
+]
+
+.footnote[Dados: [sidra.ibge.gov.br](https://sidra.ibge.gov.br) | Malhas: [geociencias.ibge.gov.br](https://geociencias.ibge.gov.br/downloads-geociencias.html)]
+
+---
+
+## Renda por setor — simbolizar quartis
+
+.your-turn[
+**Etapa 2 — classificação e legenda:**
+
+5. Botão direito na camada unida → *Propriedades → Simbologia* → selecionar **Graduado**
+6. Coluna de valor: `renda_media` | Modo de classificação: **Quantil (Contagem Igual)** | Número de classes: **4**
+7. Paleta personalizada: `#fdf6e3` → `#e9d968` → `#8fada7` → `#002b36`, do menor para o maior quartil
+8. Renomear as classes na legenda: "Q1 – Menor renda", "Q2", "Q3", "Q4 – Maior renda"
+]
+
+.footnote[Dados: [sidra.ibge.gov.br](https://sidra.ibge.gov.br) | Malhas: [geociencias.ibge.gov.br](https://geociencias.ibge.gov.br/downloads-geociencias.html)]
+
+---
+
+## Comportamento do Consumidor no Espaço
+
+.pull-left[
+**Fatores que influenciam onde se compra:**
+
+- **Proximidade** — a maioria das compras de rotina ocorre a < 3 km
+- **Oferta percebida** — variedade e qualidade superam distância
+- **Efeito âncora** — grandes varejistas atraem fluxo para vizinhos
+- **Hábito e familiaridade** — rotas do trabalho-casa
+- **Renda** — maior renda = maior raio de deslocamento
+]
+
+.pull-right[
+.question[
+**Reflita:**
+
+Por que shoppings concentram concorrentes diretos (ex: várias lojas de calçados)?
+
+Como isso contradiz a intuição e confirma a teoria espacial?
+]
+]
+
+---
+
+## Fontes de dados territoriais
+
+| Fonte | Como acessar | Dados disponíveis |
+|-------|-------------|-------------------|
+| **IBGE Censo 2022** | Download manual em sidra.ibge.gov.br → importar como camada de texto delimitado no QGIS | Pop., renda, domicílios por setor |
+| **Malha de Setores Censitários** | Download em geociencias.ibge.gov.br → *Camada → Adicionar Camada Vetorial* | Limites geográficos por setor censitário |
+| **PNAD Contínua** | Tabelas em sidra.ibge.gov.br, importadas como camada de texto delimitado | Renda, trabalho, mobilidade |
+| **IPEA Data** | Exportar CSV em ipeadata.gov.br → importar como camada de texto delimitado | PIB municipal, IDH, Gini |
+| **BHTRANS** (GTFS) | [bhtrans.pbh.gov.br](https://www.bhtrans.pbh.gov.br) — converter GTFS para camadas de pontos/linhas | Linhas e horários de transporte |
+
+---
+
+## IDH municipal — importar e relacionar
+
+.your-turn[
+**Passo a passo no QGIS — IDH municipal (IPEA Data):**
+
+1. Acessar [ipeadata.gov.br](http://www.ipeadata.gov.br) → buscar a série **ADH_IDHM** (IDH Municipal)
+2. Filtrar por Minas Gerais e exportar os dados como CSV
+3. No QGIS: *Camada → Adicionar Camada → Adicionar Camada de Texto Delimitado* → carregar o CSV
+4. Abrir a **Tabela de Atributos** da camada → botão *Ordenar por coluna* → coluna `value`, ordem decrescente
+5. Fazer o join com a malha de municípios de MG (*Propriedades → Joins*, campo comum = código do município) para visualizar o IDH no mapa
+]
+
+---
+
+## Mapa coroplético — carregar os dados
+
+.your-turn[
+**Passo a passo:**
+
+1. Baixar setores censitários de BH (IBGE) e a tabela de renda (SIDRA), unir os dados por join de atributos e exportar como `.gpkg` (*Camada → Salvar Como*)
+2. QGIS: *Camada → Adicionar Camada Vetorial* → carregar o arquivo
+3. Botão direito na camada → *Propriedades → Simbologia*
+]
+
+---
+
+## Mapa coroplético — classificar e finalizar
+
+.your-turn[
+**Passo a passo:**
+
+4. Selecionar **Graduado** → coluna `renda_media`
+5. Modo de classificação: **Quebras Naturais (Jenks)**, 5 classes
+6. Paleta: *YlOrRd* (amarelo → vermelho)
+7. Adicionar escala, norte e legenda via *Projeto → Novo Layout de Impressão*
+]
+
+.tip[
+Jenks minimiza variância intraclasse — ideal para dados socioeconômicos com distribuição assimétrica (skewed).
+]
+
+---
+
+## Atividade prática — desafio
+
+.your-turn[
+**"Onde mora o meu cliente?"** *(50 min em grupos)*
+
+**Cenário:** Você assessora uma academia premium que quer abrir segunda unidade em BH.
+
+**Objetivo:** identificar bairros com alta renda e baixa oferta de academias premium.
+
+**Entregável:** mapa anotado + um parágrafo de justificativa.
+]
+
+---
+
+## Atividade prática — tarefas
+
+.your-turn[
+1. Baixar setores censitários de BH (IBGE, Malha de Setores Censitários 2022, código `3106200`) e adicionar no QGIS
+2. Baixar renda média por setor no SIDRA (Censo 2022) e unir à malha via *Propriedades → Joins*
+3. Mapear setores com renda domiciliar média > R$ 5.000/mês (Simbologia Graduada ou filtro por expressão)
+4. Usar o plugin **QuickOSM** para extrair academias (`leisure=fitness_centre`) em BH e identificar **bairros com alta renda e sem academia premium**
+5. Propor **3 localizações candidatas** com justificativa espacial
+]
+
+---
+
+## Resolução Guiada
+
+.your-turn[
+**Passo a passo no QGIS:**
+
+1. *Camada → Adicionar Camada Vetorial*: carregar a malha de setores censitários de BH (`3106200`) baixada do IBGE
+2. *Camada → Adicionar Camada de Texto Delimitado*: carregar o CSV de renda por setor (SIDRA, tabela 9514, variável 10605)
+3. Propriedades da camada de setores → *Joins* → unir pelo código do setor censitário
+4. Caixa de ferramentas Processing → **"Extrair por expressão"** com a expressão `"renda_media" > 5000` → gera a camada `setores_alvo`
+5. Simbologia → **Categorizado** ou **Cor única de destaque** para exibir os setores-alvo em um mapa temático
+]
+
+---
+
+## Conceitos-chave da Unidade 2
+
+- O **espaço** diferencia renda, acesso e hábitos
+- **Centralidade** e **acessibilidade** definem o raio de atração comercial
+- Consumidores seguem padrões **espacialmente previsíveis**
+- Malhas do Censo 2022 + tabelas SIDRA formam a base territorial no QGIS
+- O mapa coroplético de renda é uma análise fundamental do geomarketing
+
+---
+
+## Referências
+
+- LONGLEY, P. A. et al. **Sistemas e ciência da informação geográfica**. 3. ed. Bookman, 2013. Cap. 2 e 7.
+- KOTLER, P.; KELLER, K. L. **Administração de marketing**. 15. ed. Pearson, 2019. Cap. 8 (Segmentação).
+- ROCHA, M. D. A.; SOUSA, J. M. B. M. de. **Canais de distribuição e geomarketing**. Saraiva Uni, 2017.
+- CHRISTALLER, W. *Central places in southern Germany*. Prentice-Hall, 1966.
+
+.footnote[
+[github.com/retaoliveira/geomarketing_02_espaco_geografico](https://github.com/retaoliveira/geomarketing_02_espaco_geografico)
+]
